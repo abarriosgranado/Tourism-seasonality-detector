@@ -277,7 +277,7 @@
     .route-box {
       display: grid;
       gap: 10px;
-      padding: 12px;
+      padding: 16px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #f6efe0;
@@ -301,28 +301,30 @@
 
     .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
       width: 100%;
     }
 
     .button {
       display: inline-flex;
       width: 100%;
-      min-height: 76px;
+      min-height: 104px;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 0 22px;
+      padding: 0 28px;
       border-radius: 8px;
       text-decoration: none;
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 760;
+      line-height: 1.1;
     }
 
     .button.primary {
-      background: var(--charcoal);
+      background: var(--teal);
       color: white;
+      box-shadow: 0 14px 26px rgba(15, 124, 131, .24);
     }
 
     .button.secondary {
@@ -623,7 +625,6 @@
         <div class="route-box">
           <div class="actions">
             <a class="button primary" href="outputs/yield_indices/plots/weighted_tourism_yield_map_2023_2025_hotel_adr_proxy_dynamic_links.html" target="_blank" rel="noopener">Open interactive map</a>
-            <a class="button secondary" href="#methodology">View methodology</a>
           </div>
         </div>
       </aside>
