@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tourism Seasonality Detector</title>
+  <style>
+    :root {
+      --ink: #172026;
+      --muted: #63717a;
+      --paper: #f5f2ea;
+      --panel: #fffdf8;
+      --line: #ddd6c8;
+      --charcoal: #111b22;
+      --teal: #0f7c83;
+      --green: #32715d;
+      --gold: #d49a27;
+      --terracotta: #c85332;
+      --blue-soft: #e3f0f1;
+      --shadow: 0 18px 45px rgba(28, 31, 30, .11);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    a { color: inherit; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(245, 242, 234, .92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar,
+    main,
+    footer {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 1px;
+      min-width: 260px;
+    }
+
+    .brand strong {
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    nav a {
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    nav a:hover { color: var(--ink); }
+
+    main {
+      padding: 30px 0 58px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .map-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      min-height: 520px;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .kicker {
+      margin: 0 0 14px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(36px, 5.2vw, 68px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: #40505a;
+      font-size: 18px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--line);
+    }
+
+    .summary-item {
+      background: #fffaf1;
+      padding: 16px;
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+    }
+
+    .map-card {
+      min-height: 520px;
+      padding: 22px;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .map-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .map-card h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .map-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #edf5f0;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .output-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .output-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf1;
+    }
+
+    .output-icon {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: var(--teal);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .output-item strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+
+    .output-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .route-box {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f6efe0;
+    }
+
+    .route-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    code {
+      display: block;
+      overflow-wrap: anywhere;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #26333a;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .button.primary {
+      background: var(--charcoal);
+      color: white;
+    }
+
+    .button.secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .panel {
+      padding: 24px;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 23px;
+      line-height: 1.1;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    p {
+      margin: 0 0 13px;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fffaf1;
+    }
+
+    .mini p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .formula {
+      min-height: 178px;
+      border-radius: 8px;
+      padding: 15px;
+      background: #f1f6f4;
+      border: 1px solid #d6e4df;
+    }
+
+    .formula span {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .formula p {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    li { margin: 7px 0; }
+
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fffaf1;
+    }
+
+    .number {
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--charcoal);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .decision p { margin: 0; }
+
+    .glossary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .term {
+      border-top: 1px solid var(--line);
+      padding-top: 11px;
+    }
+
+    .term strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .term span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      padding: 0 0 34px;
+      color: var(--muted);
+      font-size: 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    footer strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .content,
+      .cards,
+      .formula-grid,
+      .glossary {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy,
+      .map-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar,
+      main,
+      footer {
+        width: min(100% - 24px, 1180px);
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px 0;
+      }
+
+      nav {
+        justify-content: flex-start;
+      }
+
+      main {
+        padding-top: 18px;
+      }
+
+      .hero-copy,
+      .map-card,
+      .panel {
+        padding: 18px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <strong>Tourism Seasonality Detector</strong>
+        <span>Monthly opportunity index for Spanish tourism destinations</span>
+      </div>
+      <nav aria-label="Page sections">
+        <a href="#map">Map Route</a>
+        <a href="#methodology">Methodology</a>
+        <a href="#decisions">Decisions</a>
+        <a href="#limitations">Limitations</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">Tourism analytics project</p>
+          <h1>Detecting where tourism opportunity peaks each month.</h1>
+          <p class="lead">A practical seasonality detector for Spanish destinations, built from hotel revenue-intensity signals and tourist-apartment demand and price indicators.</p>
+        </div>
+
+        <div class="summary-grid" aria-label="Project summary">
+          <div class="summary-item"><span>Period</span><strong>2023-2025</strong></div>
+          <div class="summary-item"><span>Data source</span><strong>INE</strong></div>
+          <div class="summary-item"><span>Market</span><strong>Spain</strong></div>
+        </div>
+      </div>
+
+      <aside class="map-card" id="map">
+        <div class="map-card-header">
+          <div>
+            <h2>Project Output</h2>
+            <p>The full interactive map is kept as a separate file so this page can explain the project clearly while the map opens in its own workspace.</p>
+          </div>
+          <span class="status">Ready</span>
+        </div>
+
+        <div class="output-list">
+          <div class="output-item">
+            <span class="output-icon">01</span>
+            <div>
+              <strong>Interactive seasonality map</strong>
+              <span>Main dynamic map with links to the focused Top 10 monthly winners view.</span>
+            </div>
+          </div>
+          <div class="output-item">
+            <span class="output-icon">02</span>
+            <div>
+              <strong>Accommodation filters</strong>
+              <span>Hotels, Tourist Apartments and All views.</span>
+            </div>
+          </div>
+          <div class="output-item">
+            <span class="output-icon">03</span>
+            <div>
+              <strong>Monthly and annual rankings</strong>
+              <span>Top 10 destination views for seasonal and yearly performance.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="route-box">
+          <span class="route-label">Final HTML route</span>
+          <code>file:///Users/angeles/Documents/Tourism%20revenue%20compass/outputs/yield_indices/plots/weighted_tourism_yield_map_2023_2025_hotel_adr_proxy_dynamic_links.html</code>
+          <div class="actions">
+            <a class="button primary" href="outputs/yield_indices/plots/weighted_tourism_yield_map_2023_2025_hotel_adr_proxy_dynamic_links.html" target="_blank" rel="noopener">Open Interactive map</a>
+            <a class="button secondary" href="#methodology">View methodology</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="content">
+      <article class="panel">
+        <h2>Project Objective</h2>
+        <p>Tourism in Spain is strongly seasonal. Winter can favor mountain and ski destinations, summer usually strengthens coastal destinations, and major events such as Feria de Abril in Seville can create temporary peaks in demand.</p>
+        <p>This project uses accommodation data to detect these monthly opportunity patterns. It does not model each event or seasonal driver individually, but it helps identify when and where tourism revenue potential becomes strongest.</p>
+        <p>The core question is: which Spanish destination maximizes tourism opportunity in each month of the year?</p>
+        <p>The tool is intended for tourism planning, revenue management, seasonal investment screening and destination benchmarking, showing how tourism opportunity rotates across Spain throughout the calendar year.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Data Scope</h2>
+        <p>The project uses INE tourism data as its primary data source. This is important because the model is built on official Spanish accommodation indicators rather than scraped listings or manually estimated demand signals.</p>
+        <p>The analysis focuses on 2023-2025. Earlier years are excluded to reduce COVID-period distortion and avoid comparing current seasonality patterns with an exceptional disruption in tourism demand.</p>
+        <div class="cards">
+          <div class="mini">
+            <h3>Data source</h3>
+            <p>INE-based tourism KPIs.</p>
+          </div>
+          <div class="mini">
+            <h3>Accommodation</h3>
+            <p>Hotels and tourist apartments.</p>
+          </div>
+          <div class="mini">
+            <h3>Geography</h3>
+            <p>Destination, province and autonomous community.</p>
+          </div>
+          <div class="mini">
+            <h3>Time grain</h3>
+            <p>Monthly observations for 2023-2025.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>Technology Stack</h2>
+        <p>The project combines Python-based data processing with browser-native interactive visualization.</p>
+        <div class="cards">
+          <div class="mini">
+            <h3>Python + pandas</h3>
+            <p>Data cleaning, transformation, monthly index calculation and ranking logic.</p>
+          </div>
+          <div class="mini">
+            <h3>Leaflet + OSM</h3>
+            <p>Interactive mapping with Leaflet and OpenStreetMap for Spanish destinations.</p>
+          </div>
+          <div class="mini">
+            <h3>SVG/JavaScript</h3>
+            <p>Custom interactive charts, controls and browser-based visual behavior.</p>
+          </div>
+          <div class="mini">
+            <h3>Codex and ChatGPT</h3>
+            <p>Code optimization, research support and methodological validation.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel wide" id="methodology">
+        <h2>Methodology</h2>
+        <p>Hotels and tourist apartments do not provide equivalent revenue metrics in the dataset, so the model separates hotel, apartment and combined layers before creating the final weighted index.</p>
+        <div class="formula-grid">
+          <div class="formula">
+            <span>Hotel monthly yield index</span>
+            <code>RevPAR x days in month</code>
+            <p>If destination RevPAR is missing, the proxy uses autonomous community ADR multiplied by destination hotel occupancy.</p>
+          </div>
+          <div class="formula">
+            <span>Apartment opportunity index</span>
+            <code>(IPAP / 100) x occupancy x days</code>
+            <p>An indexed proxy because destination-level apartment ADR or RevPAR is not available.</p>
+          </div>
+          <div class="formula">
+            <span>Weighted tourism index</span>
+            <code>Hotel monthly yield index + apartment opportunity index</code>
+            <p>The model first calculates the hotel monthly yield index and the apartment opportunity index as two separate signals. Then both indices are normalized to a 0-100 score within each month so they can be compared and combined. The final All view combines those normalized scores using available bed places as weights.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel wide">
+        <h2>Interpretation of the Index</h2>
+        <p>The key point when using this tool is that the index does not measure how many euros a destination generates. Instead, it identifies which destinations show the strongest relative tourism opportunity in each month, based on the available signals of price, occupancy and accommodation data.</p>
+        <p>This distinction is essential: the score should be interpreted as a relative monthly opportunity index, not as an absolute revenue figure or a direct measure of profitability.</p>
+      </article>
+
+      <article class="panel" id="outputs">
+        <h2>Visual Outputs</h2>
+        <div class="cards">
+          <div class="mini">
+            <h3>Seasonality map</h3>
+            <p>Monthly scores across Spain for All, Hotels and Tourist apartments.</p>
+          </div>
+          <div class="mini">
+            <h3>Monthly winners</h3>
+            <p>Destinations with the strongest opportunity in each month.</p>
+          </div>
+          <div class="mini">
+            <h3>Annual winners</h3>
+            <p>Destinations with the highest sum of monthly index values.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="decisions">
+        <h2>Key Analytical Decisions</h2>
+        <div class="decision-list">
+          <div class="decision"><span class="number">1</span><p>Available bed places by destination are used only to weight the hotel and apartment indices in the combined All view. They are not used as a direct revenue multiplier, so larger destinations such as Madrid or Barcelona do not automatically dominate the score just because they have more capacity.</p></div>
+          <div class="decision"><span class="number">2</span><p>The Canary Islands are shown separately so mainland Spain can stay enlarged.</p></div>
+          <div class="decision"><span class="number">3</span><p>Monthly rankings are recalculated by month and accommodation filter.</p></div>
+        </div>
+      </article>
+
+      <article class="panel wide" id="limitations">
+        <h2>Limitations</h2>
+        <p>The index is a relative opportunity score, not literal revenue in euros. Hotel data is closer to revenue intensity because it can use RevPAR, while the apartment layer is an indexed proxy based on IPAP, occupancy and days in month.</p>
+        <ul>
+          <li>When hotel RevPAR is available by destination, the hotel component uses observed destination RevPAR. When RevPAR by destination is missing, the model uses a hotel RevPAR proxy based on autonomous community ADR and destination hotel occupancy, rather than excluding the destination.</li>
+          <li>Tourist apartment results are opportunity proxies because destination-level apartment ADR or RevPAR is not available in the dataset. IPAP is a price index, not an absolute nightly euro price.</li>
+          <li>The model focuses on accommodation indicators and excludes non-room revenue, operating costs, margins and profitability.</li>
+          <li>Coverage varies by destination and accommodation type. Some destinations may have only hotel data, only tourist apartment data or incomplete monthly KPIs, so single-segment results should be read as segment-specific opportunity signals.</li>
+          <li>Map colors reflect relative monthly position, not a higher absolute revenue value. For example, Salamanca appears more orange in December than in September even though its absolute combined index is slightly lower in December, because in December it ranks better compared with the other destinations available that month.</li>
+        </ul>
+      </article>
+
+      <article class="panel wide" id="conclusions">
+        <h2>Conclusions</h2>
+        <p>The tool works as a tourism seasonality and relative opportunity detector. It does not measure how many euros a destination generates. Instead, it identifies which destinations show the strongest relative tourism opportunity in each month, based on available signals of price, occupancy and accommodation data.</p>
+        <h3>1. The Canary Islands act as a year-round stabilizer</h3>
+        <p>Many Canary Islands destinations appear strongly across the analysis, especially in winter and off-peak months. Destinations such as Adeje, San Miguel de Abona, San Bartolomé de Tirajana, Mogán, Tías, Yaiza, Santiago del Teide and Breña Baja show that the Canary Islands can act as a more stable tourism market when many mainland or seasonal coastal destinations are weaker.</p>
+        <p>For a hotel or tourist apartment operator, this suggests that the Canary Islands may be relevant for year-round planning, cash flow stability and lower dependence on the traditional summer peak.</p>
+        <h3>2. The model avoids letting destination size dominate the analysis</h3>
+        <p>Because the index does not multiply by total rooms or total bed places, large cities such as Madrid or Barcelona do not automatically dominate the ranking simply because they have more accommodation supply.</p>
+        <p>This makes the tool useful for identifying destinations with strong tourism intensity, even when they are smaller in absolute size.</p>
+        <h3>3. Seasonality rotates across destinations and months</h3>
+        <p>The tool shows a clear monthly rotation of tourism opportunity.</p>
+        <p>In winter, the strongest signals are concentrated in the Canary Islands and selected mountain destinations. Naut Aran stands out in February, reflecting ski-season demand linked to Baqueira-Beret and the Val d’Aran.</p>
+        <p>In spring, opportunity shifts toward urban and event-driven destinations. Sevilla appears strongly in April, which is consistent with Semana Santa and Feria de abril. Barcelona also gains strength in April, May and June.</p>
+        <p>In summer, the strongest signals move toward coastal and Mediterranean destinations such as Chiclana de la Frontera, Marbella, Barbate, Vera, Sitges and other beach-oriented markets.</p>
+        <p>In September and October, the pattern becomes more mixed, with Donostia/San Sebastián, Barcelona, Aínsa-Sobrarbe, Madrid and Canary Islands destinations appearing strongly.</p>
+        <h3>4. Event-driven patterns are visible in the monthly winners</h3>
+        <p>The monthly winners suggest that the tool is capturing not only generic seasonality, but also destination-month patterns that may be linked to local events, festivals or seasonal attractions.</p>
+        <p>Naut Aran in February: likely linked to ski-season demand in Baqueira-Beret and the Val d’Aran.</p>
+        <p>Sevilla in April: consistent with Semana Santa and Feria de abril.</p>
+        <p>Barcelona in April, May, June and October: possibly linked to a combination of international urban demand, conferences, festivals and major events such as Primavera Sound, Sónar or MWC-related business travel.</p>
+        <p>Chiclana de la Frontera in July: consistent with summer beach demand around La Barrosa and Novo Sancti Petri, potentially reinforced by summer music events such as Concert Music Festival.</p>
+        <p>Donostia/San Sebastián in September: potentially linked to the San Sebastián International Film Festival, as well as late-summer cultural and gastronomic tourism.</p>
+        <p>Aínsa-Sobrarbe in September: consistent with late-summer and early-autumn mountain, nature and rural tourism.</p>
+        <p>Canary Islands in November and December: consistent with winter-sun tourism and year-end travel demand.</p>
+        <p>A future event layer would help explain not only where and when opportunity rises, but also why.</p>
+        <h3>5. Smaller destinations can reveal high relative intensity</h3>
+        <p>The model brings visibility to smaller destinations such as Breña Baja, Tazacorte, El Paso, Alajeró, Aínsa-Sobrarbe and Cudillero.</p>
+        <p>These places are not necessarily large tourism markets by volume, but they may show strong relative opportunity in specific months due to concentrated accommodation supply, coastal tourism, nature tourism, rural tourism or seasonal demand.</p>
+        <h3>6. The tool is useful for FP&A, revenue management, strategy and treasury</h3>
+        <p>From a business perspective, the tool helps teams decide where to focus attention each month: pricing, campaigns, staffing, budgeting, investment, expansion and cash flow planning.</p>
+        <h3>7. The accommodation filters are important</h3>
+        <p>The map should be read through its three layers: Hotels, Tourist Apartments and All.</p>
+        <p>This matters because some destinations have only hotel data, others only tourist apartment data, and others both. The combined index is useful, but it should be interpreted carefully when a destination is represented by only one accommodation type.</p>
+        <h3>8. The annual winners show sustained opportunity</h3>
+        <p>The Top 10 annual winners highlight destinations with a more sustained tourism opportunity signal across the year.</p>
+        <p>The strong presence of Canary Islands destinations suggests that these markets may offer more stable seasonal performance, making them especially relevant for annual planning, cash flow stability and year-round accommodation strategy.</p>
+        <p>However, this ranking should be interpreted as cumulative relative opportunity, not as absolute revenue.</p>
+        <h3>Executive takeaway</h3>
+        <p>The tool helps reveal the seasonal rhythm of Spanish tourism: where opportunity rises, when it peaks, and which destinations deserve closer business attention each month.</p>
+      </article>
+
+      <article class="panel wide" id="glossary">
+        <h2>Glossary</h2>
+        <div class="glossary">
+          <div class="term"><strong>ADR</strong><span>Average daily rate. In hotels, ADR represents the average price charged per occupied room. In this project, ADR is used at autonomous community level because it is multiplied by the destination hotel occupancy rate by rooms to estimate a hotel RevPAR proxy when destination-level RevPAR is missing.</span></div>
+          <div class="term"><strong>Annual winners</strong><span>Destinations with the highest sum of monthly index values across the year. They indicate consistently strong performance across months.</span></div>
+          <div class="term"><strong>IPAP</strong><span>IPAP is the Tourist Apartment Price Index published by INE; it is a chained Laspeyres price index with base year 2002, meaning that it tracks how tourist apartment prices evolve over time by linking year-to-year price changes back to a common reference point where 2002 equals 100. It is an index, not an absolute euro price, and it does not provide destination-level ADR or RevPAR. In this project, IPAP is used as a national price-pressure reference for tourist apartments and is combined with destination-level occupancy by bed places to build a relative monthly opportunity proxy.</span></div>
+          <div class="term"><strong>Monthly winners</strong><span>Destinations that reach the highest opportunity scores within a specific month. They are useful for identifying seasonal peaks.</span></div>
+          <div class="term"><strong>Normalization</strong><span>Transformation of scores to a 0-100 scale within each month and accommodation layer. This makes destinations comparable within the same analytical context.</span></div>
+          <div class="term"><strong>Occupancy rate</strong><span>Percentage of available accommodation capacity that is occupied. For hotels, the model prioritizes occupancy by rooms. For tourist apartments, the model uses occupancy by bed places.</span></div>
+          <div class="term"><strong>RevPAR</strong><span>Revenue per available room. It combines room price and occupancy into one hotel performance metric. In this project, RevPAR is multiplied by days in month to create the hotel monthly revenue-intensity index.</span></div>
+          <div class="term"><strong>Tourist destination</strong><span>Destination-level geographic unit used in the INE tourism dataset. It can differ from broader provinces or autonomous communities.</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Disclaimer</strong>
+    <span>This document describes a project developed as part of a broader analytical study. The larger study corresponds to the capstone project of the AI and data analytics bootcamp at IMMUNE Technology Institute and is expected to be published in the future. The current version is exploratory and should be interpreted as a methodological prototype rather than a definitive commercial valuation, official revenue model or investment recommendation.</span>
+  </footer>
+</body>
+</html>
